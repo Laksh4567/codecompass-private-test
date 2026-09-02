@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CodeCompass</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-panel: #151b23;
+      --bg-bubble-user: #2a3441;
+      --bg-bubble-assistant: #161d27;
+      --border: #262d38;
+      --accent: #5b8def;
+      --accent-soft: #7dd3fc;
+      --text: #e6e8eb;
+      --text-muted: #7d8590;
+      --text-faint: #4d5561;
+      --code-bg: #0a0e14;
+      --danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 380px;
+      min-height: 480px;
+      max-height: 560px;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-mark svg { width: 16px; height: 16px; }
+
+    .header-text { flex: 1; min-width: 0; }
+
+    .header-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .header-repo {
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(91, 141, 239, 0.12);
+      color: var(--accent-soft);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .status-pill.error { background: rgba(248, 113, 113, 0.12); color: var(--danger); }
+    .status-pill.indexing { background: rgba(125, 211, 252, 0.1); color: var(--text-muted); }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(91, 141, 239, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .empty-icon svg { width: 24px; height: 24px; }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .empty-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      max-width: 260px;
+    }
+
+    .try-asking-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-faint);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+
+    .suggestions { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+
+    .suggestion-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .suggestion-card:hover { border-color: var(--accent); }
+
+    .suggestion-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(125, 211, 252, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .suggestion-text-title { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .suggestion-text-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .chat.active { display: flex; }
+
+    .msg-user {
+      align-self: flex-end;
+      max-width: 85%;
+      background: var(--bg-bubble-user);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      padding: 8px 12px;
+      border-radius: 12px 12px 2px 12px;
+    }
+
+    .msg-timestamp {
+      align-self: flex-end;
+      font-size: 10px;
+      color: var(--text-faint);
+      margin-top: -8px;
+    }
+
+    .msg-assistant {
+      align-self: flex-start;
+      max-width: 100%;
+      background: var(--bg-bubble-assistant);
+      border: 1px solid var(--border);
+      border-radius: 2px 12px 12px 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .msg-assistant.loading { color: var(--text-muted); font-style: italic; }
+
+    .citation-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(91, 141, 239, 0.1);
+      color: var(--accent-soft);
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 5px;
+      margin: 4px 4px 4px 0;
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 11.5px;
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre;
+      color: #c9d1d9;
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    textarea {
+      flex: 1;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 12.5px;
+      font-family: inherit;
+      resize: none;
+      max-height: 80px;
+    }
+
+    textarea:focus { outline: none; border-color: var(--accent); }
+    textarea::placeholder { color: var(--text-faint); }
+
+    #send-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--accent);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #send-btn svg { width: 15px; height: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="white" stroke-width="1.6"/>
+        <path d="M15.5 8.5L10.8 10.8L8.5 15.5L13.2 13.2L15.5 8.5Z" fill="white"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">CodeCompass</div>
+      <div class="header-repo" id="repo-info">Detecting repo...</div>
+    </div>
+    <div class="status-pill" id="status-pill">—</div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="#7dd3fc" stroke-width="1.6"/>
+        <path d="M15.5 8.5L10.8 10.8L8.5 15.5L13.2 13.2L15.5 8.5Z" fill="#7dd3fc"/>
+      </svg>
+    </div>
+    <div class="empty-title">Welcome to CodeCompass</div>
+    <div class="empty-subtitle">Your AI guide for navigating complex codebases. Ask anything about this repository.</div>
+    <div class="try-asking-label">Try asking</div>
+    <div class="suggestions">
+      <div class="suggestion-card" data-question="What does this project do?">
+        <div class="suggestion-icon">🧭</div>
+        <div>
+          <div class="suggestion-text-title">What does this project do?</div>
+          <div class="suggestion-text-sub">Overview of functionality</div>
+        </div>
+      </div>
+      <div class="suggestion-card" data-question="How is auth handled?">
+        <div class="suggestion-icon">🔐</div>
+        <div>
+          <div class="suggestion-text-title">How is auth handled?</div>
+          <div class="suggestion-text-sub">Security &amp; middleware</div>
+        </div>
+      </div>
+      <div class="suggestion-card" data-question="Explain the structure of this repo">
+        <div class="suggestion-icon">🗂️</div>
+        <div>
+          <div class="suggestion-text-title">Explain the structure</div>
+          <div class="suggestion-text-sub">Directories &amp; architecture</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input-bar">
+    <textarea id="input" rows="1" placeholder="Ask about this repo..."></textarea>
+    <button id="send-btn" disabled>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 12L20 4L14 20L11 13L4 12Z" fill="white"/>
+      </svg>
+    </button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
